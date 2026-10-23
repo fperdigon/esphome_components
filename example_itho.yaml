@@ -13,6 +13,7 @@ esp32:
     advanced:
       sram1_as_iram: true
       minimum_chip_revision: "3.0"
+      flash_chip: generic
     
 external_components:
 - source: github://hencou/esphome_components
