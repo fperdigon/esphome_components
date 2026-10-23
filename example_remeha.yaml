@@ -10,6 +10,9 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
+    advanced:
+      sram1_as_iram: true
+      flash_chip: gd
 
 external_components:
 - source:
