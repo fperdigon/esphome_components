@@ -111,6 +111,25 @@ namespace esphome {
 
             // Copy state before setting it to avoid group 0 re-initialization clobbering it
             stateStore->set(bulbId, stateUpdates);
+
+            // White/CCT remotes send relative button presses (brightness_up/down,
+            // temperature_up/down) that carry no value. Publish the absolute value the
+            // state store computed from them so the ESPHome light follows the remote.
+            const char* relCmd = requestJson["command"] | "";
+            const bool relBrightness = strcmp(relCmd, "brightness_up") == 0 || strcmp(relCmd, "brightness_down") == 0;
+            const bool relTemperature = strcmp(relCmd, "temperature_up") == 0 || strcmp(relCmd, "temperature_down") == 0;
+            if (relBrightness || relTemperature) {
+              GroupState* newState = stateStore->get(bulbId);
+              if (newState != NULL) {
+                if (relBrightness && newState->isSetBrightness()) {
+                  // GroupState brightness is 0-100 for CCT; updateOutput expects 0-255
+                  requestJson["brightness"] = (uint16_t)newState->getBrightness() * 255 / 100;
+                }
+                if (relTemperature && newState->isSetKelvin()) {
+                  requestJson["color_temp"] = newState->getMireds();
+                }
+              }
+            }
             
             light::LightState* state;
             if (bulbId.groupId == 0) {
